@@ -6,7 +6,7 @@
 
 | NRP        | Nama                            |
 |:----------:|:-------------------------------:|
-| 5027241006 | Nabilah Anindya Paramesti       |
+| 5027231046 | Ryan Adya Purwanto              |
 | 5027241092 | Muhammad Khairul Yahya          |
 
 
