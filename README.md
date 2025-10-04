@@ -22,7 +22,9 @@ Topologi jaringan dibangun di GNS3 dengan arsitektur sebagai berikut:
 
 ### Diagram Koneksi
 
-[gambar]
+**Map Topologi**
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20094115.png)
 
 ### Koneksi Topologi
 - `NAT` ↔ `Eru` (eth0)
@@ -60,7 +62,7 @@ Topologi jaringan dibangun di GNS3 dengan arsitektur sebagai berikut:
 ```
 
 **Bukti:**
-[gambar topologi]
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20094115.png)
 
 ---
 
@@ -84,8 +86,13 @@ ping -c 3 192.220.2.2  # Tes ke Varda (beda jaringan)
 ```
 
 - **Bukti**:
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20094549.png)
 
-[kumpulan ping]
+Eru ke `192.220.1.3` (Manwe) & `192.220.2.2` (Varda)
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20094746.png)
+
+Melkor ke Manwe (`192.220.1.3`)
 
 ### Soal 4: Koneksi Internet untuk Client
 
@@ -104,7 +111,9 @@ ping -c 3 8.8.8.8
 
 - **Bukti:**
 
-[melkor ping ke internet]
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20094947.png)
+
+melkor ping ke internet
 
 ### Soal 5: Konfigurasi Permanen (Revisi)
 
@@ -122,7 +131,13 @@ echo '/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> ~/.bashrc
 2. Setelah Eru menyala, langsung tes `ping -c 3 8.8.8.8` dari **Melkor** tanpa konfigurasi manual.
 
 - **Bukti:**
-[ping berhasil ke melkor setelah di reboot]
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20095631.png)
+
+kalau misalkan ip forwardingnya bisa
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20095714.png)
+
+Dari Melkor ke DNS Publik Google (`8.8.8.8`)
 
 ---
 
@@ -146,8 +161,11 @@ chmod +x traffic.sh && ./traffic.sh
 
 - **Analisis:** Di Wireshark, terapkan filter ip.addr == 192.220.1.3 untuk mengisolasi semua lalu lintas data dari dan ke Manwe.
 
-- **Bukti:** 
-[ss wireshark di filter]
+- **Bukti:**
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20102340.png)
+
+ss wireshark di filter Ip Manwe.
 
 ### Soal 7: Konfigurasi FTP Server (Revisi)
 
@@ -160,7 +178,14 @@ chmod +x traffic.sh && ./traffic.sh
 2. **Tes melkor:** ftp 192.220.1.1 21, login. Hasil: Gagal dengan 530 Permission denied, membuktikan melkor diblokir.
 
 - **Bukti:** 
-[Screenshot terminal Manwe yang menunjukkan keberhasilan ainur dan kegagalan melkor.]
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20104214.png)
+
+FTP di manwe buat user (`ainur`).
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20104240.png)
+
+FTP di manwe buat user (`melkor`).
 
 ### Soal 8&9: Analisis FTP (Upload & Download)
 
@@ -174,7 +199,19 @@ chmod +x traffic.sh && ./traffic.sh
 - **Verifikasi Read-Only (Di Manwe):** Coba put file sebagai ainur. Hasil: Gagal dengan 553 Could not create file.
 
 - **Bukti:**
-[ss STOR & RETR terus terminal manwe untuk kegagalan put]
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20105509.png)
+
+Wireshark `STOR` cuaca.txt
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20112958.png)
+
+Upload file `kitab_penciptaan.txt` ke FTP di Manwe
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20114202.png)
+
+Wireshark `RETR` kitab_penciptaan.txt
+
 
 ### Soal 10: Analis Serangan Ping
 
@@ -182,14 +219,123 @@ chmod +x traffic.sh && ./traffic.sh
 - **Perintah (Di Melkor):** ping -c 100 192.220.1.1
 - **Analisis:** Hasil 0% packet loss dan avg rtt yang rendah membuktikan Eru sangat tangguh dan tidak terpengaruh.
 - **Bukti:** 
-[Screenshot ringkasan hasil ping di terminal Melkor.]
+```bash
+root@Eru:~# ping -c 100 192.220.1.1
+PING 192.220.1.1 (192.220.1.1) 56(84) bytes of data.
+64 bytes from 192.220.1.1: icmp_seq=1 ttl=64 time=0.060 ms
+64 bytes from 192.220.1.1: icmp_seq=2 ttl=64 time=0.037 ms
+64 bytes from 192.220.1.1: icmp_seq=3 ttl=64 time=0.026 ms
+64 bytes from 192.220.1.1: icmp_seq=4 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=5 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=6 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=7 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=8 ttl=64 time=0.046 ms
+64 bytes from 192.220.1.1: icmp_seq=9 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=10 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=11 ttl=64 time=0.036 ms
+64 bytes from 192.220.1.1: icmp_seq=12 ttl=64 time=0.032 ms
+64 bytes from 192.220.1.1: icmp_seq=13 ttl=64 time=0.030 ms
+64 bytes from 192.220.1.1: icmp_seq=14 ttl=64 time=0.034 ms
+64 bytes from 192.220.1.1: icmp_seq=15 ttl=64 time=0.030 ms
+64 bytes from 192.220.1.1: icmp_seq=16 ttl=64 time=0.024 ms
+64 bytes from 192.220.1.1: icmp_seq=17 ttl=64 time=0.028 ms
+64 bytes from 192.220.1.1: icmp_seq=18 ttl=64 time=0.034 ms
+64 bytes from 192.220.1.1: icmp_seq=19 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=20 ttl=64 time=0.035 ms
+64 bytes from 192.220.1.1: icmp_seq=21 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=22 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=23 ttl=64 time=0.038 ms
+64 bytes from 192.220.1.1: icmp_seq=24 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=25 ttl=64 time=0.039 ms
+64 bytes from 192.220.1.1: icmp_seq=26 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=27 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=28 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=29 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=30 ttl=64 time=0.031 ms
+64 bytes from 192.220.1.1: icmp_seq=31 ttl=64 time=0.036 ms
+64 bytes from 192.220.1.1: icmp_seq=32 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=33 ttl=64 time=0.038 ms
+64 bytes from 192.220.1.1: icmp_seq=34 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=35 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=36 ttl=64 time=0.035 ms
+64 bytes from 192.220.1.1: icmp_seq=37 ttl=64 time=0.030 ms
+64 bytes from 192.220.1.1: icmp_seq=38 ttl=64 time=0.036 ms
+64 bytes from 192.220.1.1: icmp_seq=39 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=40 ttl=64 time=0.038 ms
+64 bytes from 192.220.1.1: icmp_seq=41 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=42 ttl=64 time=0.030 ms
+64 bytes from 192.220.1.1: icmp_seq=43 ttl=64 time=0.031 ms
+64 bytes from 192.220.1.1: icmp_seq=44 ttl=64 time=0.037 ms
+64 bytes from 192.220.1.1: icmp_seq=45 ttl=64 time=0.035 ms
+64 bytes from 192.220.1.1: icmp_seq=46 ttl=64 time=0.039 ms
+64 bytes from 192.220.1.1: icmp_seq=47 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=48 ttl=64 time=0.030 ms
+64 bytes from 192.220.1.1: icmp_seq=49 ttl=64 time=0.024 ms
+64 bytes from 192.220.1.1: icmp_seq=50 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=51 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=52 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=53 ttl=64 time=0.036 ms
+64 bytes from 192.220.1.1: icmp_seq=54 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=55 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=56 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=57 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=58 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=59 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=60 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=61 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=62 ttl=64 time=0.039 ms
+64 bytes from 192.220.1.1: icmp_seq=63 ttl=64 time=0.051 ms
+64 bytes from 192.220.1.1: icmp_seq=64 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=65 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=66 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=67 ttl=64 time=0.069 ms
+64 bytes from 192.220.1.1: icmp_seq=68 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=69 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=70 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=71 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=72 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=73 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=74 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=75 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=76 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=77 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=78 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=79 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=80 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=81 ttl=64 time=0.085 ms
+64 bytes from 192.220.1.1: icmp_seq=82 ttl=64 time=0.037 ms
+64 bytes from 192.220.1.1: icmp_seq=83 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=84 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=85 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=86 ttl=64 time=0.039 ms
+64 bytes from 192.220.1.1: icmp_seq=87 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=88 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=89 ttl=64 time=0.041 ms
+64 bytes from 192.220.1.1: icmp_seq=90 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=91 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=92 ttl=64 time=0.044 ms
+64 bytes from 192.220.1.1: icmp_seq=93 ttl=64 time=0.043 ms
+64 bytes from 192.220.1.1: icmp_seq=94 ttl=64 time=0.064 ms
+64 bytes from 192.220.1.1: icmp_seq=95 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=96 ttl=64 time=0.048 ms
+64 bytes from 192.220.1.1: icmp_seq=97 ttl=64 time=0.045 ms
+64 bytes from 192.220.1.1: icmp_seq=98 ttl=64 time=0.042 ms
+64 bytes from 192.220.1.1: icmp_seq=99 ttl=64 time=0.040 ms
+64 bytes from 192.220.1.1: icmp_seq=100 ttl=64 time=0.041 ms
+
+--- 192.220.1.1 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 112637ms
+rtt min/avg/max/mdev = 0.024/0.040/0.085/0.007 ms
+```
 
 ## Soal 11: Analisis Kelemahan Telnet
 
 - **Walkthrough:** Telnet adalah protokol lawas untuk remote control. Kelemahan utamanya adalah tidak adanya enkripsi. Dengan merekam sesi login Telnet dan menggunakan fitur Follow > TCP Stream di Wireshark, kita bisa merekonstruksi seluruh percakapan persis seperti yang terjadi, termasuk melihat username dan password dalam bentuk teks biasa.
 - **Analisis:** Di Wireshark, filter telnet, lalu Follow > TCP Stream.
-- **Bukti:** 
-[Screenshot jendela "Follow TCP Stream" yang dengan jelas menampilkan **username dan password dalam bentuk teks biasa**].
+- **Bukti:**
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20120427.png)
+
+Screenshot jendela "Follow TCP Stream" yang dengan jelas menampilkan **username dan password dalam bentuk teks biasa**.
 
 ## Soal 12: Pemindaian Port
 
@@ -198,7 +344,9 @@ chmod +x traffic.sh && ./traffic.sh
 - **Perintah (Di Eru):** nc -zv -w 2 192.220.1.2 21 80 666
 
 - **Bukti:**
-[ss eru nampilin connection refused buat semua port]
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20121432.png)
+
+tidak ada 3 port yang berjalan.
 
 ## Soal 13: Analisis Keamanan SSH
 
@@ -207,7 +355,14 @@ chmod +x traffic.sh && ./traffic.sh
 - **Analisis:** Di Wireshark, filter ssh. Paket-paket ditandai sebagai Encrypted packet. Follow > TCP Stream hanya menampilkan data acak.
 
 - **Bukti:**
-[ss follow tcp stream dari ssh yang ke enkripsi, terus dibandingin sama telnet (11)]
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20133911.png)
+
+Ini untuk hapus kunci lama di Varda.
+
+![image alt](https://github.com/sipalingnub/Jarkom-Modul-1-2025-K-18/blob/639b1cd212b441506b953528e74cd8069ee40c62/assets/Screenshot%202025-10-04%20134216.png)
+
+ss follow tcp stream dari ssh yang ke enkripsi, terus dibandingin sama telnet (11).
 
 
 ## Konfigurasi Jaringan Awal (`/etc/network/interfaces`)
@@ -292,6 +447,9 @@ dns-nameservers 8.8.8.8
 - **Sistem Operasi Node:** Docker Image ervn-debi
 - **Alat Analisis Jaringan:** Wireshark
 - **Alat Bantu:** `vsftpd`, `openssh-server`, `telnetd`, `netcat`, `iptables`
+
+## Demo Praktikum Modul 1 Jarkom
+https://youtu.be/TmcyMDL82F4
 
 ## Kesimpulan
 Praktikum Modul 1 berhasil diselesaikan dengan baik. Kami telah mempelajari konfigurasi jaringan dasar, manajemen server FTP, analisis protokol, dan perbandingan keamanan antara Telnet dan SSH. Kendala teknis berhasil diatasi dengan troubleshooting yang sistematis.
