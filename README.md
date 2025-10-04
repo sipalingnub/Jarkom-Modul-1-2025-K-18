@@ -25,11 +25,11 @@ Topologi jaringan dibangun di GNS3 dengan arsitektur sebagai berikut:
 [gambar]
 
 ### Koneksi Topologi
-- NAT ↔ Eru (eth0)
-- Eru (eth1) ↔ Switch1
-- Eru (eth2) ↔ Switch2  
-- Switch1 ↔ Melkor (eth0) & Manwe (eth0)
-- Switch2 ↔ Varda (eth0) & Ulmo (eth0)
+- `NAT` ↔ `Eru` (eth0)
+- `Eru` (eth1) ↔ `Switch1`
+- `Eru` (eth2) ↔ `Switch2`  
+- `Switch1` ↔ `Melkor` (eth0) & `Manwe` (eth0)
+- `Switch2` ↔ `Varda` (eth0) & `Ulmo` (eth0)
 
 ## Persiapan
 
@@ -60,431 +60,157 @@ Topologi jaringan dibangun di GNS3 dengan arsitektur sebagai berikut:
 ```
 
 **Bukti:**
-![Topologi Jaringan](images/topologi.png)
+[gambar topologi]
 
 ---
 
-### Soal 2: Koneksi Internet untuk Router
+### Soal 2&3: Konektivitas Dasar & Routing
 
-**Deskripsi:** Membuat Eru dapat tersambung ke internet.
+- **Walkthrough:** Di tahap ini, kita "menghidupkan" Eru. Pertama, Eru dihubungkan ke internet. Kemudian, fitur IP forwarding diaktifkan. Ini seperti mengubah Eru dari sekadar komputer biasa menjadi "petugas lalu lintas" yang pintar, yang bisa mengarahkan paket data antar jaringan yang berbeda (dari jaringan Melkor ke jaringan Varda, dan sebaliknya).
 
-**Langkah-langkah:**
+- **Perintah (Di Eru):**
 ```bash
-# Di konsol Eru
-apt-get update && apt-get install -y isc-dhcp-client
-dhclient eth0
+# (Soal 2) Verifikasi koneksi internet Eru
 ping -c 3 8.8.8.8
-```
 
-**Script:**
-```bash
-#!/bin/bash
-# Konfigurasi internet untuk router Eru
-apt-get update
-apt-get install -y isc-dhcp-client
-dhclient eth0
-ping -c 3 8.8.8.8
-```
-**Walkthrough:** Di sini kita pastikan router Eru bisa internetan. DHCP dipasang supaya Eru dapat IP otomatis dari NAT. Tes ping ke `8.8.8.8` (Google DNS) buat bukti. Kalau reply jalan, berarti aman. Kalau nggak, berarti salah konfigurasi interface.
-
-**Bukti:**
-![Ping Internet Eru](images/ping-8.8.8.8-eru.png)
-
----
-
-### Soal 3: Konektivitas Antar Client
-
-**Deskripsi:** Memastikan semua Ainur (Client) dapat terhubung satu sama lain.
-
-**Langkah-langkah:**
-```bash
-# Di konsol Eru - aktifkan IP forwarding
+# (Soal 3) Aktifkan IP Forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
-
-# Di konsol Melkor - test koneksi
-ping -c 3 192.220.1.3  # Ke Manwe (satu jaringan)
-ping -c 3 192.220.2.2  # Ke Varda (beda jaringan)
 ```
 
-**Script:**
+- **Verifikasi (Di Melkor):**
 ```bash
-#!/bin/bash
-# Di Eru - Enable IP forwarding
-echo 1 > /proc/sys/net/ipv4/ip_forward
-
-# Di Melkor - Test konektivitas
-echo "Testing connectivity to Manwe..."
-ping -c 3 192.220.1.3
-echo "Testing connectivity to Varda..."
-ping -c 3 192.220.2.2
+ping -c 3 192.220.1.3  # Tes ke Manwe (satu jaringan)
+ping -c 3 192.220.2.2  # Tes ke Varda (beda jaringan)
 ```
-**Walkthrough:** Linux defaultnya bermasalah, dia nggak mau forward paket antar jaringan. Makanya kita aktifin IP forwarding manual. Setelah nyala, client bisa saling ping lewat Eru. Kalua masih gagal, kemungkinan routing table atau IP address salah.
 
-**Bukti:**
-![Ping Antar Client](images/ping-melkor-manwe.png)
+- **Bukti**:
 
----
+[kumpulan ping]
 
 ### Soal 4: Koneksi Internet untuk Client
 
-**Deskripsi:** Membuat semua Client dapat tersambung ke internet.
+-**Walkthrough:** Client memiliki IP privat (192.220.x.x) yang tidak dikenali di internet. Agar mereka bisa online, kita perlu memasang "penyamaran" di Eru menggunakan iptables. Aturan MASQUERADE ini membuat semua client seolah-olah menggunakan IP publik milik Eru saat mengakses internet.
 
-**Langkah-langkah:**
+-**Peirntah (Di Eru):**
 ```bash
-# Di konsol Eru - setup NAT
 apt-get update && apt-get install -y iptables
 /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+```
 
-# Di konsol Melkor - test internet
+- **Verifikasi (Di Melkor):**
+```bash
 ping -c 3 8.8.8.8
 ```
 
-**Script:**
+- **Bukti:**
+
+[melkor ping ke internet]
+
+### Soal 5: Konfigurasi Permanen (Revisi)
+
+- **Walkthrough:** Masalah klasik di Linux adalah konfigurasi sementara akan hilang saat reboot. Untuk mengatasinya, kita menambahkan perintah IP forwarding dan NAT ke dalam file ~/.bashrc di Eru. File ini seperti "catatan pengingat" yang dibaca dan dijalankan oleh sistem setiap kali Eru booting atau login, sehingga Eru otomatis menjadi router setiap saat.
+
+- **Perintah (Di Eru):** 
 ```bash
-#!/bin/bash
-# Di Eru - Setup NAT Masquerade
-apt-get update
-apt-get install -y iptables
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> ~/.bashrc
+echo '/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> ~/.bashrc
 
-# Di Melkor - Test internet connectivity
-echo "Testing internet connection..."
-ping -c 3 8.8.8.8
 ```
-**Walkthrough:** Client masih belum bisa internetan kalau cuman forward doang. Jadi NAT dipasang biar alamat private client diubah jadi public. Intinya, semua request client dipinjemin IP si Eru. Setelah aturan ini, client bisa ping ke internet.
 
-**Bukti:**
-![Ping Internet Client](images/ping-melkor-8.8.8.8.png)
+- **Pembuktian:**
+1. Reboot node Eru dari GNS3.
+2. Setelah Eru menyala, langsung tes `ping -c 3 8.8.8.8` dari **Melkor** tanpa konfigurasi manual.
+
+- **Bukti:**
+[ping berhasil ke melkor setelah di reboot]
 
 ---
 
-### Soal 5: Konfigurasi Permanen
+### Soal 6: Packet Sniffing Manwe (Revisi)
 
-**Deskripsi:** Konfigurasi tidak boleh hilang saat semua node di-restart.
+- **Walkthrough:** Tugas ini adalah menyadap komunikasi Manwe. Terdapat kendala saat menggunakan wget karena link Google Drive dan masalah sertifikat. Solusinya adalah: atasi masalah DNS, gunakan wget dengan flag --no-check-certificate untuk mengunduh halaman HTML-nya, lalu secara manual salin-tempel konten script yang benar ke dalam file traffic.sh. Setelah itu, script bisa dijalankan sambil direkam oleh Wireshark.
 
-**Langkah-langkah:**
+- **Perintah (Di Manwe)**: 
 ```bash
-# Setup rc.local untuk IP forwarding
-echo '#!/bin/sh -e' > /etc/rc.local
-echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/rc.local
-echo 'exit 0' >> /etc/rc.local
-chmod +x /etc/rc.local
+# Atasi masalah DNS (jika perlu)
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
-# Install iptables-persistent
-apt-get install -y iptables-persistent
+# Atasi masalah sertifikat & unduh halaman HTML
+wget --no-check-certificate "[https://drive.google.com/drive/folders/1ULr_Fik1O0_79zUng41POMZtdzJTugVR?usp=sharing](https://drive.google.com/drive/folders/1ULr_Fik1O0_79zUng41POMZtdzJTugVR?usp=sharing)" -O traffic.sh
+
+# Buka 'traffic.sh' dengan nano, hapus isinya, lalu tempel konten script yang benar.
+
+# Jalankan script sambil direkam Wireshark
+chmod +x traffic.sh && ./traffic.sh
 ```
 
-**Script:**
-```bash
-#!/bin/bash
-# Setup konfigurasi permanen di Eru
-
-# Buat rc.local untuk IP forwarding
-cat > /etc/rc.local << 'EOF'
-#!/bin/sh -e
-echo 1 > /proc/sys/net/ipv4/ip_forward
-iptables-restore < /etc/iptables/rules.v4
-exit 0
-EOF
-
-chmod +x /etc/rc.local
-
-# Install iptables-persistent
-apt-get install -y iptables-persistent
-
-# Simpan aturan iptables
-iptables-save > /etc/iptables/rules.v4
-```
-**Walkthrough:** Masalah klasik: tiap reboot, iptables reset. Jadi kita install iptables-persistent biar rules NAT otomatis nyala pas booting. Anggap aja kayak auto-save di game.
-
-**Bukti:**
-![Konfigurasi Permanen](images/reboot-test.png)
-
----
-
-### Soal 6: Packet Sniffing Komunikasi Manwe
-
-**Deskripsi:** Menyusup ke komunikasi Manwe dan Eru saat file `traffic.sh` dijalankan.
-
-**Langkah-langkah:**
-1. Start Capture di GNS3 pada kabel antara Manwe dan Switch1
-2. Jalankan script traffic.sh di Manwe
-3. Stop capture setelah 10 detik
-4. Filter dengan: `ip.addr == 192.220.1.3`
-
-**Script traffic.sh:**
-```bash
-#!/bin/bash
-# Script traffic.sh untuk menghasilkan traffic
-echo "Starting traffic generation..."
-for i in {1..5}; do
-    ping -c 2 192.220.1.1  # Ping ke Eru
-    sleep 1
-done
-echo "Traffic generation completed."
-```
-**Walkthrough:** Disuruh capture paket dari Manwe ke Eru. Bisa pakai tcpdump langsung di Eru atau capture Wireshark di link. Hasilnya nunjukin paket ICMP/TCP lewat, bukti bahwa routing udah benar.
-
-**Bukti:**
-![Packet Sniffing](images/soal6-packet-sniffing.png)
-
----
-
-### Soal 7: Konfigurasi FTP Server
-
-**Deskripsi:** Membuat FTP server di Eru dengan 2 user: ainur (read/write) dan melkor (tanpa akses).
-
-**Langkah-langkah:**
-```bash
-# Install vsftpd
-apt-get update && apt-get install -y vsftpd
-
-# Buat user dan direktori
-useradd -m ainur && passwd ainur
-useradd -s /usr/sbin/nologin melkor && passwd melkor
-mkdir -p /home/ainur/ftp_root/share_files
-
-# Konfigurasi vsftpd
-# Edit /etc/vsftpd.conf dengan:
-# local_enable=YES, write_enable=YES, anonymous_enable=NO, chroot_local_user=YES
-```
-
-**Script:**
-```bash
-#!/bin/bash
-# Konfigurasi FTP Server di Eru
-
-# Install vsftpd
-apt-get update
-apt-get install -y vsftpd
-
-# Buat user ainur
-useradd -m ainur
-echo "ainur:password123" | chpasswd
-
-# Buat user melkor tanpa shell login
-useradd -s /usr/sbin/nologin melkor
-echo "melkor:password123" | chpasswd
-
-# Buat struktur direktori FTP
-mkdir -p /home/ainur/ftp_root/share_files
-chown root:root /home/ainur/ftp_root
-chown ainur:ainur /home/ainur/ftp_root/share_files
-usermod -d /home/ainur/ftp_root ainur
-
-# Konfigurasi vsftpd
-cat > /etc/vsftpd.conf << 'EOF'
-listen=YES
-local_enable=YES
-write_enable=YES
-local_umask=022
-dirmessage_enable=YES
-use_localtime=YES
-xferlog_enable=YES
-connect_from_port_20=YES
-chroot_local_user=YES
-secure_chroot_dir=/var/run/vsftpd/empty
-pam_service_name=vsftpd
-rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-ssl_enable=NO
-anonymous_enable=NO
-userlist_enable=YES
-userlist_file=/etc/vsftpd.userlist
-userlist_deny=NO
-EOF
-
-# Buat userlist
-echo "ainur" > /etc/vsftpd.userlist
-
-# Restart service
-systemctl restart vsftpd
-```
-**Walkthrough:** Di sini kita bikin FTP server. `ainur` dikasih akses penuh, sedangkan `melkor` dibuat user dummy (pakai /usr/sbin/nologin biar gk bisa login). Folder share_files jadi lokasi upload/download. Tujuannya biar bisa bedain hak akses antar user.
-
-**Bukti:**
-![FTP Login](images/soal7-ftp-login.png)
-
----
-
-### Soal 8: Analisis Upload FTP (STOR)
-
-**Deskripsi:** Menganalisis proses upload file dari Ulmo ke Eru.
-
-**Langkah-langkah:**
-1. Start Capture pada kabel Ulmo ↔ Switch2
-2. Dari Ulmo, konek FTP ke Eru, login sebagai ainur, dan upload file
-3. Stop capture dan filter dengan `ftp`
-4. Cari perintah `STOR`
-
-**Script FTP Upload:**
-```bash
-#!/bin/bash
-# Script untuk upload file via FTP dari Ulmo
-ftp -n 192.220.2.1 << EOF
-user ainur password123
-put testfile.txt
-quit
-EOF
-```
-
-**Bukti:**
-![FTP STOR](images/soal8-ftp-stor.png)
-
----
-
-### Soal 9: Analisis Download FTP (RETR) & Read-Only
-
-**Deskripsi:** Menganalisis proses download dari Eru ke Manwe, lalu mengubah akses ainur menjadi read-only.
-
-**Langkah-langkah:**
-```bash
-# Capture paket FTP download
-# Ubah permission menjadi read-only
-chmod 555 /home/ainur/ftp_root/share_files
-```
-
-**Script:**
-```bash
-#!/bin/bash
-# Di Eru - Ubah permission menjadi read-only
-chmod 555 /home/ainur/ftp_root/share_files
-
-# Di Manwe - Test download dan upload
-echo "Testing FTP operations..."
-ftp -n 192.220.1.1 << EOF
-user ainur password123
-get testfile.txt downloaded_file.txt
-put newfile.txt
-quit
-EOF
-```
-**Walkthrough 8 & 9:** FTP gak aman karena semua perintah dan data dikirim plaintext. Kalau Ulmo upload file, di capture keliatan perintah `STOR`. Kalau Manwe download, muncul `RETR`. Jadi gampang banget orang iseng intip isinya. 
-
-**Bukti:**
-![FTP RETR](images/soal9-ftp-retr.png)
-
----
-
-### Soal 10: Simulasi Serangan Ping Flood
-
-**Deskripsi:** Menguji ketahanan Eru dengan mengirim 100 paket ping dari Melkor.
-
-**Langkah-langkah:**
-```bash
-# Di konsol Melkor
-ping -c 100 192.220.1.1
-```
-
-**Script:**
-```bash
-#!/bin/bash
-# Ping flood test dari Melkor
-echo "Starting ping flood test..."
-ping -c 100 192.220.1.1
-echo "Ping flood test completed."
-```
-**Walkthrough:** Tujuan soal ini buat ngetest flooding. Client nge-ping router berkali-kali sampe traffic penuh. Di capture keliatan banjir ICMP masuk ke Eru.
-
-**Bukti:**
-![Ping Flood](images/soal10-ping-flood.png)
-
----
-
-### Soal 11: Analisis Kelemahan Telnet
-
-**Deskripsi:** Membuktikan Telnet mengirim username dan password sebagai plain text.
-
-**Langkah-langkah:**
-1. Install telnetd di Melkor
-2. Start Capture pada kabel Eru ↔ Switch1
-3. Dari Eru, koneksi telnet ke Melkor dan login
-4. Stop capture dan Follow TCP Stream
-
-**Script:**
-```bash
-#!/bin/bash
-# Di Melkor - Setup telnet server
-apt-get update
-apt-get install -y telnetd
-systemctl start inetd
-
-# Buat user untuk testing
-useradd -m testuser
-echo "testuser:testpass" | chpasswd
-
-# Di Eru - Test telnet connection
-telnet 192.220.1.2
-```
-**Walkthrough:** Telnet udah kuno, semua data dikirim tanpa enkripsi. Username & password bisa kelihatan jelas di Wireshark (Follow TCP Stream). Jadi ini bukti nyata kalau Telnet nggak aman.
-
-**Bukti:**
-![Telnet Plaintext](images/soal11-telnet-plaintext.png)
-
----
-
-### Soal 12: Pemindaian Port dengan Netcat
-
-**Deskripsi:** Memindai port 21, 80, dan 666 di Melkor dari Eru.
-
-**Langkah-langkah:**
-```bash
-# Di konsol Eru
-nc -zv -w 2 192.220.1.2 21 80 666
-```
-
-**Script:**
-```bash
-#!/bin/bash
-# Port scanning dengan netcat dari Eru
-echo "Scanning ports on Melkor (192.220.1.2)..."
-nc -zv -w 2 192.220.1.2 21
-nc -zv -w 2 192.220.1.2 80
-nc -zv -w 2 192.220.1.2 666
-echo "Port scanning completed."
-```
-**Walkthrough:** Netcat dipake buat scanning port. Outputnya nunjukin port mana aja yang terbuka. Teknik ini biasanya dipakai attacker buat reconnaissance.
-
-**Bukti:**
-![Netcat Scan](images/soal12-netcat-scan.png)
-
----
-
-### Soal 13: Analisis Keamanan SSH
-
-**Deskripsi:** Membuktikan keamanan SSH dengan menyadap sesi login dari Varda ke Eru.
-
-**Langkah-langkah:**
-1. Install openssh-server di Eru
-2. Start Capture pada kabel Varda ↔ Switch2
-3. Dari Varda, koneksi SSH ke Eru dan login
-4. Stop capture dan Follow TCP Stream
-
-**Script:**
-```bash
-#!/bin/bash
-# Di Eru - Setup SSH server
-apt-get update
-apt-get install -y openssh-server
-systemctl start ssh
-systemctl enable ssh
-
-# Buat user untuk testing
-useradd -m sshuser
-echo "sshuser:sshpass123" | chpasswd
-
-# Di Varda - Test SSH connection
-ssh sshuser@192.220.2.1
-```
-
-**Walkthrough:** SSH kebalikan dari Telnet: semua data terenkripsi. Di Wireshark kita cuman bisa lihat ciphertext, gak bisa lihat passwordnya. Inilah kenapa SSH masih dipakai sampai sekarang.
-
-**Bukti:**
-![SSH Encrypted](images/soal13-ssh-encrypted.png)
-
----
-
-## Konfigurasi Jaringan Lengkap
+- **Analisis:** Di Wireshark, terapkan filter ip.addr == 192.220.1.3 untuk mengisolasi semua lalu lintas data dari dan ke Manwe.
+
+- **Bukti:** 
+[ss wireshark di filter]
+
+### Soal 7: Konfigurasi FTP Server (Revisi)
+
+- **Walkthrough:** vsftpd di-install di Eru. Untuk mengatasi error vsftpd dan writable root, struktur direktori yang aman dibuat: user ainur "dipenjara" di direktori /home/ainur/ftp_root yang dimiliki oleh root, tetapi diberi hak tulis di sub-direktori /upload. User melkor diblokir sepenuhnya dengan tidak memasukkannya ke dalam userlist yang berfungsi sebagai "daftar tamu".
+
+- **Verifikasi (Di Manwe):**
+
+1. **Tes ainur:** ftp 192.220.1.1 21, login, cd upload, lalu put file. Hasil: Berhasil, membuktikan hak read-write.
+
+2. **Tes melkor:** ftp 192.220.1.1 21, login. Hasil: Gagal dengan 530 Permission denied, membuktikan melkor diblokir.
+
+- **Bukti:** 
+[Screenshot terminal Manwe yang menunjukkan keberhasilan ainur dan kegagalan melkor.]
+
+### Soal 8&9: Analisis FTP (Upload & Download)
+
+- **Walkthrough:** Sesi FTP direkam untuk melihat "bahasa" asli protokol ini. Saat pengguna mengetik put (upload), perintah yang dikirim adalah STOR. Saat mengetik get (download), perintah yang dikirim adalah RETR. Untuk mengubah akses menjadi read-only, izin direktori upload diubah dengan chmod 555, yang menghapus hak write.
+
+- **Analisis:**
+
+1. **Upload (Soal 8):** Filter ftp di Wireshark menunjukkan perintah `Request: STOR.`
+2. **Download (Soal 9):** Filter ftp di Wireshark menunjukkan perintah `Request: RETR.`
+
+- **Verifikasi Read-Only (Di Manwe):** Coba put file sebagai ainur. Hasil: Gagal dengan 553 Could not create file.
+
+- **Bukti:**
+[ss STOR & RETR terus terminal manwe untuk kegagalan put]
+
+### Soal 10: Analis Serangan Ping
+
+- **Walkthrough:** Ini adalah stress test sederhana. Dengan ping -c 100, kita mengirim 100 "surat" ke Eru secara berturut-turut. Hasilnya dianalisis untuk melihat apakah ada "surat" yang hilang (packet loss) atau waktu balasnya melambat (avg rtt).
+- **Perintah (Di Melkor):** ping -c 100 192.220.1.1
+- **Analisis:** Hasil 0% packet loss dan avg rtt yang rendah membuktikan Eru sangat tangguh dan tidak terpengaruh.
+- **Bukti:** 
+[Screenshot ringkasan hasil ping di terminal Melkor.]
+
+## Soal 11: Analisis Kelemahan Telnet
+
+- **Walkthrough:** Telnet adalah protokol lawas untuk remote control. Kelemahan utamanya adalah tidak adanya enkripsi. Dengan merekam sesi login Telnet dan menggunakan fitur Follow > TCP Stream di Wireshark, kita bisa merekonstruksi seluruh percakapan persis seperti yang terjadi, termasuk melihat username dan password dalam bentuk teks biasa.
+- **Analisis:** Di Wireshark, filter telnet, lalu Follow > TCP Stream.
+- **Bukti:** 
+[Screenshot jendela "Follow TCP Stream" yang dengan jelas menampilkan **username dan password dalam bentuk teks biasa**].
+
+## Soal 12: Pemindaian Port
+
+- **Walkthrough:** netcat (nc) adalah "pisau Swiss Army" untuk jaringan. Dengan mode pemindaian (-zv), kita bisa mengetuk "pintu-pintu" (port) di Melkor. Respons Connection refused berarti pintu tersebut tertutup rapat, membuktikan tidak ada layanan yang berjalan.
+
+- **Perintah (Di Eru):** nc -zv -w 2 192.220.1.2 21 80 666
+
+- **Bukti:**
+[ss eru nampilin connection refused buat semua port]
+
+## Soal 13: Analisis Keamanan SSH
+
+- **Walkthrough:** SSH adalah pengganti Telnet yang aman. Kuncinya ada di **enkripsi**. Sesi dimulai dengan "jabat tangan" aman (Key Exchange) untuk membuat kunci rahasia. Setelah itu, semua data "dibungkus" dalam enkripsi. Jika kita coba intip dengan Follow > TCP Stream, yang terlihat hanyalah data acak, kontras dengan Telnet.
+
+- **Analisis:** Di Wireshark, filter ssh. Paket-paket ditandai sebagai Encrypted packet. Follow > TCP Stream hanya menampilkan data acak.
+
+- **Bukti:**
+[ss follow tcp stream dari ssh yang ke enkripsi, terus dibandingin sama telnet (11)]
+
+
+## Konfigurasi Jaringan Awal (`/etc/network/interfaces`)
 
 ### Eru (Router)
 ```bash
